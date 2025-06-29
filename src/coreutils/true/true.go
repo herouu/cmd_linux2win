@@ -1,7 +1,7 @@
 package main
 
 import (
-	"awesomeProject/src/common"
+	"cmd_linux2win/src/common"
 	"flag"
 	"fmt"
 	"os"
