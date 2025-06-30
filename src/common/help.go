@@ -25,8 +25,11 @@ type HelpInfo struct {
 }
 
 type Option struct {
-	Flag        string
+	Short       string
+	Verbose     string
 	Description string
+	ShortArr    []string
+	VerboseArr  []string
 	Func        func()
 }
 
@@ -57,15 +60,15 @@ func (h HelpInfo) Print() {
 	if len(h.Options) > 0 {
 		maxFlagLen := 0
 		for _, opt := range h.Options {
-			if len(opt.Flag) > maxFlagLen {
-				maxFlagLen = len(opt.Flag)
+			if len(opt.Verbose) > maxFlagLen {
+				maxFlagLen = len(opt.Verbose)
 			}
 		}
 		// option选项处理
 		for _, opt := range h.Options {
 			// 对齐选项描述
-			spacing := strings.Repeat(" ", maxFlagLen-len(opt.Flag)+2)
-			fmt.Fprintf(os.Stdout, "      --%s%s%s\n", opt.Flag, spacing, opt.Description)
+			spacing := strings.Repeat(" ", maxFlagLen-len(opt.Verbose)+2)
+			fmt.Fprintf(os.Stdout, "      --%s%s%s\n", opt.Verbose, spacing, opt.Description)
 		}
 		fmt.Fprintln(os.Stdout)
 	}
@@ -86,10 +89,28 @@ func (h HelpInfo) Print() {
 func (h HelpInfo) Parse() {
 	var sliceOption []flagOption
 	for _, opt := range h.Options {
-		b := flag.Bool(opt.Flag, false, opt.Description)
+		var verbose bool
+		if opt.Verbose != "" {
+			flag.BoolVar(&verbose, opt.Verbose, false, opt.Description)
+		}
+		if opt.Short != "" {
+			flag.BoolVar(&verbose, opt.Short, false, opt.Description)
+		}
+
+		if len(opt.VerboseArr) != 0 {
+			for _, per := range opt.VerboseArr {
+				flag.BoolVar(&verbose, per, false, opt.Description)
+			}
+		}
+		if len(opt.ShortArr) != 0 {
+			for _, per := range opt.ShortArr {
+				flag.BoolVar(&verbose, per, false, opt.Description)
+			}
+		}
+
 		sliceOption = append(sliceOption, flagOption{
 			opt:  opt,
-			flag: b,
+			flag: &verbose,
 		})
 	}
 	flag.Parse()
@@ -102,6 +123,6 @@ func (h HelpInfo) Parse() {
 }
 
 func Version(cmdName string) string {
-	const version = "%s (Go coreutils) 1.0"
-	return fmt.Sprintf(version, cmdName)
+	const version = "%s (Go coreutils) 1.0%s"
+	return fmt.Sprintf(version, cmdName, Copyright)
 }

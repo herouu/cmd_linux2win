@@ -7,18 +7,20 @@ import (
 	"os"
 )
 
+const cmdName = "yes"
+
 func main() {
 	helpInfo := common.HelpInfo{
 		Name:        os.Args[0],
 		UsageLines:  []string{"[STRING]...", "OPTION"},
 		Description: "Repeatedly output a line with all specified STRING(s), or 'y'.",
 		Options: []common.Option{
-			{"help", "display this help and exit", func() {
+			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 				os.Exit(0)
 			}},
-			{"version", "output version information and exit", func() {
-				fmt.Print(common.Version(os.Args[0]))
+			{Verbose: "version", Description: "output version information and exit", Func: func() {
+				fmt.Print(common.Version(cmdName))
 				os.Exit(0)
 			}},
 		},

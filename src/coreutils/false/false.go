@@ -19,11 +19,11 @@ func main() {
 		},
 		Description: "Exit with a status code indicating failure.",
 		Options: []common.Option{
-			{"help", "display this help and exit", func() {
+			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 			}},
-			{"version", "output version information and exit", func() {
-				fmt.Print(common.Version(os.Args[0]))
+			{Verbose: "version", Description: "output version information and exit", Func: func() {
+				fmt.Print(common.Version(cmdName))
 			}},
 		},
 		Note: fmt.Sprintf(`NOTE: your shell may have its own version of %s, which usually supersedes
