@@ -795,6 +795,9 @@ var Usage = func() {
 	PrintDefaults()
 }
 
+var InvalidShort = func(c uint8) {
+}
+
 // NFlag returns the number of flags that have been set.
 func (f *FlagSet) NFlag() int { return len(f.actual) }
 
@@ -1052,10 +1055,8 @@ func (f *FlagSet) parseSingleShortArg(shorthands string, args []string, fn parse
 			outArgs = stripUnknownFlagValue(outArgs)
 			return
 		default:
+			InvalidShort(c)
 			//err = f.failf("unknown shorthand flag: %q in -%s", c, shorthands)
-			err = fmt.Errorf(`/bin/yes: invalid option -- %q
-Try '/bin/yes --help' for more information.`, c)
-			fmt.Fprintln(f.Output(), err)
 			return
 		}
 	}

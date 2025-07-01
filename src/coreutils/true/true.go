@@ -29,11 +29,6 @@ func main() {
 the version described here.  Please refer to your shell's documentation
 for details about the options it supports.`, cmdName),
 	}
-
-	flag.Usage = func() {
-		helpInfo.Print()
-	}
-
 	helpInfo.Parse()
 	os.Exit(0)
 }
