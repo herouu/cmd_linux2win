@@ -2,8 +2,8 @@ package main
 
 import (
 	"cmd_linux2win/src/common"
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"os"
 )
 

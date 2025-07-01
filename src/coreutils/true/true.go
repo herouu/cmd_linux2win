@@ -2,8 +2,8 @@ package main
 
 import (
 	"cmd_linux2win/src/common"
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"os"
 )
 
@@ -18,10 +18,10 @@ func main() {
 		},
 		Description: "Exit with a status code indicating success.",
 		Options: []common.Option{
-			{Short: "h", Verbose: "help", ShortArr: []string{"x", "j"}, VerboseArr: []string{"xx", "jj"}, Description: "display this help and exit", Func: func() {
+			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 			}},
-			{Short: "v", Verbose: "version", Description: "output version information and exit", Func: func() {
+			{Verbose: "version", Description: "output version information and exit", Func: func() {
 				fmt.Print(common.Version(cmdName))
 			}},
 		},

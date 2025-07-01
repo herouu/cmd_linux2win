@@ -1,8 +1,8 @@
 package common
 
 import (
-	"flag"
 	"fmt"
+	flag "github.com/spf13/pflag"
 	"os"
 	"strings"
 )
@@ -28,9 +28,13 @@ type Option struct {
 	Short       string
 	Verbose     string
 	Description string
-	ShortArr    []string
-	VerboseArr  []string
+	CmdArr      []Cmd
 	Func        func()
+}
+
+type Cmd struct {
+	Short string
+	Long  string
 }
 
 type flagOption struct {
@@ -68,7 +72,13 @@ func (h HelpInfo) Print() {
 		for _, opt := range h.Options {
 			// 对齐选项描述
 			spacing := strings.Repeat(" ", maxFlagLen-len(opt.Verbose)+2)
-			fmt.Fprintf(os.Stdout, "      --%s%s%s\n", opt.Verbose, spacing, opt.Description)
+			if opt.Short != "" && opt.Verbose == "" {
+				fmt.Fprintf(os.Stdout, "      -%s    %s%s\n", opt.Short, spacing, opt.Description)
+			} else if opt.Short != "" && opt.Verbose != "" {
+				fmt.Fprintf(os.Stdout, "      -%s, --%s%s%s\n", opt.Short, opt.Verbose, spacing, opt.Description)
+			} else if opt.Short == "" && opt.Verbose != "" {
+				fmt.Fprintf(os.Stdout, "          --%s%s%s\n", opt.Verbose, spacing, opt.Description)
+			}
 		}
 		fmt.Fprintln(os.Stdout)
 	}
@@ -87,32 +97,27 @@ func (h HelpInfo) Print() {
 }
 
 func (h HelpInfo) Parse() {
+
+	//flag.CommandLine.SetOutput(os.Stdout)
+	flag.CommandLine.Init(os.Args[0], flag.ContinueOnError)
+
 	var sliceOption []flagOption
 	for _, opt := range h.Options {
 		var verbose bool
-		if opt.Verbose != "" {
-			flag.BoolVar(&verbose, opt.Verbose, false, opt.Description)
-		}
-		if opt.Short != "" {
-			flag.BoolVar(&verbose, opt.Short, false, opt.Description)
-		}
 
-		if len(opt.VerboseArr) != 0 {
-			for _, per := range opt.VerboseArr {
-				flag.BoolVar(&verbose, per, false, opt.Description)
+		flag.BoolVarP(&verbose, opt.Verbose, opt.Short, false, opt.Description)
+
+		if len(opt.CmdArr) != 0 {
+			for _, per := range opt.CmdArr {
+				flag.BoolVarP(&verbose, per.Long, per.Short, false, opt.Description)
 			}
 		}
-		if len(opt.ShortArr) != 0 {
-			for _, per := range opt.ShortArr {
-				flag.BoolVar(&verbose, per, false, opt.Description)
-			}
-		}
-
 		sliceOption = append(sliceOption, flagOption{
 			opt:  opt,
 			flag: &verbose,
 		})
 	}
+
 	flag.Parse()
 
 	for i := range sliceOption {
