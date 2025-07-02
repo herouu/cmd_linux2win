@@ -126,3 +126,16 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/whoami
 * [x] /usr/bin/yes
 * [ ] /usr/bin/md5sum.textutils
+
+### 测试
+
+* -v
+* -vv
+* -help
+* -help_1
+* --help
+* --help_1
+* --other
+* --h
+* --
+* -

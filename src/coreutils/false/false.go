@@ -29,6 +29,7 @@ func main() {
 		Note: fmt.Sprintf(`NOTE: your shell may have its own version of %s, which usually supersedes
 the version described here.  Please refer to your shell's documentation
 for details about the options it supports.`, cmdName),
+		IgnoreShorthand: true,
 	}
 	helpInfo.Parse()
 	os.Exit(1)

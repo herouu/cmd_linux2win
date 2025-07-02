@@ -178,6 +178,8 @@ type FlagSet struct {
 	normalizeNameFunc func(f *FlagSet, name string) NormalizedName
 
 	addedGoFlagSets []*goflag.FlagSet
+	ignoreShorthand bool // ignore shorthand
+	ignoreShortH    bool // ignore -h
 }
 
 // A Flag represents the state of a flag.
@@ -795,7 +797,7 @@ var Usage = func() {
 	PrintDefaults()
 }
 
-var InvalidShort = func(c uint8) {
+var InvalidFlag = func(f string) {
 }
 
 // NFlag returns the number of flags that have been set.
@@ -998,7 +1000,8 @@ func (f *FlagSet) parseLongArg(s string, args []string, fn parseFunc) (a []strin
 
 			return stripUnknownFlagValue(a), nil
 		default:
-			err = f.failf("unknown flag: --%s", name)
+			//err = f.failf("unknown flag: --%s", name)
+			InvalidFlag(name)
 			return
 		}
 	}
@@ -1040,7 +1043,7 @@ func (f *FlagSet) parseSingleShortArg(shorthands string, args []string, fn parse
 	flag, exists := f.shorthands[c]
 	if !exists {
 		switch {
-		case c == 'h':
+		case !f.ignoreShortH && c == 'h':
 			f.usage()
 			err = ErrHelp
 			return
@@ -1055,7 +1058,7 @@ func (f *FlagSet) parseSingleShortArg(shorthands string, args []string, fn parse
 			outArgs = stripUnknownFlagValue(outArgs)
 			return
 		default:
-			InvalidShort(c)
+			InvalidFlag(string(c))
 			//err = f.failf("unknown shorthand flag: %q in -%s", c, shorthands)
 			return
 		}
@@ -1131,7 +1134,9 @@ func (f *FlagSet) parseArgs(args []string, fn parseFunc) (err error) {
 			}
 			args, err = f.parseLongArg(s, args, fn)
 		} else {
-			args, err = f.parseShortArg(s, args, fn)
+			if !f.ignoreShorthand {
+				args, err = f.parseShortArg(s, args, fn)
+			}
 		}
 		if err != nil {
 			return
@@ -1260,4 +1265,12 @@ func (f *FlagSet) Init(name string, errorHandling ErrorHandling) {
 	f.name = name
 	f.errorHandling = errorHandling
 	f.argsLenAtDash = -1
+}
+
+func (f *FlagSet) SetIgnoreShorthand(ignoreShorthand bool) {
+	f.ignoreShorthand = ignoreShorthand
+}
+
+func (f *FlagSet) SetIgnoreShortH(ignoreShortH bool) {
+	f.ignoreShortH = ignoreShortH
 }

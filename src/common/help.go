@@ -16,14 +16,16 @@ There is NO WARRANTY, to the extent permitted by law.`
 )
 
 type HelpInfo struct {
-	Name          string   // 命令名称
-	UsageLines    []string // 使用示例
-	Description   string   // 描述信息
-	Options       []Option // 选项列表
-	Note          string   // 注意事项
-	Copyright     string   // 注意事项
-	Invalid       func(c uint8)
-	ErrorHandling flag.ErrorHandling
+	Name            string   // 命令名称
+	UsageLines      []string // 使用示例
+	Description     string   // 描述信息
+	Options         []Option // 选项列表
+	Note            string   // 注意事项
+	Copyright       string   // 注意事项
+	Invalid         func(c string)
+	ErrorHandling   *flag.ErrorHandling
+	IgnoreShorthand bool
+	IgnoreShortH    bool
 }
 
 type Option struct {
@@ -42,13 +44,6 @@ type Cmd struct {
 type flagOption struct {
 	opt  Option
 	flag *bool
-}
-
-func NewHelpInfo() *HelpInfo {
-	return &HelpInfo{
-		ErrorHandling: flag.ContinueOnError,
-		Copyright:     Copyright,
-	}
 }
 
 func (h HelpInfo) Print() {
@@ -110,11 +105,16 @@ func (h HelpInfo) Parse() {
 		h.Print()
 	}
 	if h.Invalid != nil {
-		flag.InvalidShort = h.Invalid
+		flag.InvalidFlag = h.Invalid
 	}
 
 	flag.CommandLine.SetOutput(os.Stdout)
-	flag.CommandLine.Init(os.Args[0], h.ErrorHandling)
+	flag.CommandLine.SetIgnoreShorthand(h.IgnoreShorthand)
+	flag.CommandLine.SetIgnoreShortH(h.IgnoreShortH)
+
+	if h.ErrorHandling != nil {
+		flag.CommandLine.Init(os.Args[0], *h.ErrorHandling)
+	}
 
 	var sliceOption []flagOption
 	for _, opt := range h.Options {
