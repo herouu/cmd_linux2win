@@ -1,8 +1,8 @@
 package common
 
 import (
+	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
-	flag "github.com/spf13/pflag"
 	"os"
 	"strings"
 )
