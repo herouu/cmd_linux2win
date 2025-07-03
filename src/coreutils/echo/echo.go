@@ -5,11 +5,16 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 var cmdName = "echo"
 
 func main() {
+	enableEscapeChars := false
+	omitNewline := false
+	disableEscapeChars := false
+
 	helpInfo := common.HelpInfo{
 		Name: os.Args[0],
 		UsageLines: []string{
@@ -18,9 +23,15 @@ func main() {
 		},
 		Description: "Echo the STRING(s) to standard output.",
 		Options: []common.Option{
-			{Short: "n", Description: "do not output the trailing newline"},
-			{Short: "e", Description: "enable interpretation of backslash escapes"},
-			{Short: "E", Description: "disable interpretation of backslash escapes (default)"},
+			{Verbose: "n", Short: "n", Description: "do not output the trailing newline", Func: func() {
+				omitNewline = true
+			}},
+			{Verbose: "e", Short: "e", Description: "enable interpretation of backslash escapes", Func: func() {
+				enableEscapeChars = true
+			}},
+			{Verbose: "E", Short: "E", BoolVarP: true, Description: "disable interpretation of backslash escapes (default)", Func: func() {
+				disableEscapeChars = true
+			}},
 			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 				os.Exit(0)
@@ -48,4 +59,63 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 		IgnoreShortH: true,
 	}
 	helpInfo.Parse()
+
+	concatenated := strings.Join(flag.Args(), " ")
+
+	a := []rune(concatenated)
+
+	length := len(a)
+
+	ai := 0
+
+	if length != 0 {
+		for i := 0; i < length; {
+			c := a[i]
+			i++
+			if (enableEscapeChars == true || disableEscapeChars == false) && c == '\\' && i < length {
+				c = a[i]
+				i++
+				switch c {
+				case 'a':
+					c = '\a'
+				case 'b':
+					c = '\b'
+				case 'c':
+					os.Exit(0)
+				case 'e':
+					c = '\x1B'
+				case 'f':
+					c = '\f'
+				case 'n':
+					c = '\n'
+				case 'r':
+					c = '\r'
+				case 't':
+					c = '\t'
+				case 'v':
+					c = '\v'
+				case '\\':
+					c = '\\'
+				case 'x':
+					c = a[i]
+					i++
+					if '9' >= c && c >= '0' && i < length {
+						hex := (c - '0')
+						c = a[i]
+						i++
+						if '9' >= c && c >= '0' && i <= length {
+							c = 16*(c-'0') + hex
+						}
+					}
+				}
+			}
+			a[ai] = c
+			ai++
+		}
+	}
+	os.Stdout.WriteString(string(a[:ai]))
+	if omitNewline == false {
+		fmt.Print("\n")
+	}
+
 }

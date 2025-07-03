@@ -26,6 +26,7 @@ type HelpInfo struct {
 	ErrorHandling   *flag.ErrorHandling
 	IgnoreShorthand bool
 	IgnoreShortH    bool
+	CmdFunc         func([]string) string
 }
 
 type Option struct {
@@ -34,6 +35,7 @@ type Option struct {
 	Description string
 	CmdArr      []Cmd
 	Func        func()
+	BoolVarP    bool
 }
 
 type Cmd struct {
@@ -120,7 +122,7 @@ func (h HelpInfo) Parse() {
 	for _, opt := range h.Options {
 		var verbose bool
 
-		flag.BoolVarP(&verbose, opt.Verbose, opt.Short, false, opt.Description)
+		flag.BoolVarP(&verbose, opt.Verbose, opt.Short, opt.BoolVarP, opt.Description)
 
 		if len(opt.CmdArr) != 0 {
 			for _, per := range opt.CmdArr {
