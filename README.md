@@ -1,4 +1,3 @@
-
 ```shell
 go build -ldflags="-s -w" -trimpath -o true.exe .\src\coreutils\true\true.go
 upx -9 true.exe
@@ -13,7 +12,6 @@ UPX 5.0.1       Markus Oberhumer, Laszlo Molnar & John Reiser    May 6th 2025
 1628160 ->    867840   53.30%    win64/pe     false.exe
 
 ```
-
 
 ### coreutils命令列表
 
@@ -123,9 +121,21 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/users
 * [ ] /usr/bin/wc
 * [ ] /usr/bin/who
-* [ ] /usr/bin/whoami
+* [x] /usr/bin/whoami
 * [x] /usr/bin/yes
 * [ ] /usr/bin/md5sum.textutils
+
+### grep包替代
+
+```bash
+scoop install grep
+```
+
+### sudo
+
+```bash
+scoop install sudo
+```
 
 ### 测试
 
@@ -138,4 +148,18 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * --other
 * --h
 * --
-* -
+
+###  
+
+```shell
+for cmd in /usr/bin/* /bin/*; do
+    if [ -x "$cmd" ]; then
+        output=$(dpkg -S "$cmd" 2>/dev/null)
+        [ $? -eq 0 ] && echo "$output"
+    fi
+done | sort -u > out.txt
+```
+
+```shell
+cat 文件名out.txt | cut -d: -f1 | sort | uniq -c | sort -nr
+```
