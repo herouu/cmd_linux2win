@@ -13,7 +13,6 @@ var cmdName = "echo"
 func main() {
 	enableEscapeChars := false
 	omitNewline := false
-	disableEscapeChars := false
 
 	helpInfo := common.HelpInfo{
 		Name: os.Args[0],
@@ -29,8 +28,8 @@ func main() {
 			{Verbose: "e", Short: "e", Description: "enable interpretation of backslash escapes", Func: func() {
 				enableEscapeChars = true
 			}},
-			{Verbose: "E", Short: "E", BoolVarP: true, Description: "disable interpretation of backslash escapes (default)", Func: func() {
-				disableEscapeChars = true
+			{Verbose: "E", Short: "E", Description: "disable interpretation of backslash escapes (default)", Func: func() {
+				enableEscapeChars = false
 			}},
 			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
@@ -75,11 +74,6 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 	}
 	helpInfo.Parse()
 
-	fmt.Printf("%v", os.Args[1:])
-	for _, op := range os.Args[1:] {
-		fmt.Println(op)
-	}
-
 	concatenated := strings.Join(flag.Args(), " ")
 
 	a := []rune(concatenated)
@@ -92,7 +86,7 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 		for i := 0; i < length; {
 			c := a[i]
 			i++
-			if (enableEscapeChars == true && disableEscapeChars == false) && c == '\\' && i < length {
+			if (enableEscapeChars == true) && c == '\\' && i < length {
 				c = a[i]
 				i++
 				switch c {
