@@ -43,9 +43,9 @@ type Cmd struct {
 	Long  string
 }
 
-type flagOption struct {
-	opt  Option
-	flag *bool
+type FlagOption struct {
+	Opt  Option
+	Flag *bool
 }
 
 func (h HelpInfo) Print() {
@@ -102,7 +102,7 @@ func (h HelpInfo) Print() {
 	}
 }
 
-func (h HelpInfo) Parse() {
+func (h HelpInfo) Parse() []FlagOption {
 	flag.Usage = func() {
 		h.Print()
 	}
@@ -118,7 +118,7 @@ func (h HelpInfo) Parse() {
 		flag.CommandLine.Init(os.Args[0], *h.ErrorHandling)
 	}
 
-	var sliceOption []flagOption
+	var sliceOption []FlagOption
 	for _, opt := range h.Options {
 		var verbose bool
 
@@ -129,19 +129,19 @@ func (h HelpInfo) Parse() {
 				flag.BoolVarP(&verbose, per.Long, per.Short, false, opt.Description)
 			}
 		}
-		sliceOption = append(sliceOption, flagOption{
-			opt:  opt,
-			flag: &verbose,
+		sliceOption = append(sliceOption, FlagOption{
+			Opt:  opt,
+			Flag: &verbose,
 		})
 	}
 
 	flag.Parse()
-
 	for i := range sliceOption {
-		if *sliceOption[i].flag {
-			sliceOption[i].opt.Func()
+		if *sliceOption[i].Flag {
+			sliceOption[i].Opt.Func()
 		}
 	}
+	return sliceOption
 }
 
 func Version(cmdName string) string {

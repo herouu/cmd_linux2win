@@ -41,7 +41,22 @@ func main() {
 				os.Exit(0)
 			}},
 		},
-		Note: fmt.Sprintf(`NOTE: your shell may have its own version of %s, which usually supersedes
+		Note: fmt.Sprintf(`If -e is in effect, the following sequences are recognized:
+
+  \\      backslash
+  \a      alert (BEL)
+  \b      backspace
+  \c      produce no further output
+  \e      escape
+  \f      form feed
+  \n      new line
+  \r      carriage return
+  \t      horizontal tab
+  \v      vertical tab
+  \0NNN   byte with octal value NNN (1 to 3 digits)
+  \xHH    byte with hexadecimal value HH (1 to 2 digits)
+
+NOTE: your shell may have its own version of %s, which usually supersedes
 the version described here.  Please refer to your shell's documentation
 for details about the options it supports.`, cmdName),
 		Invalid: func(f string) {
@@ -60,6 +75,11 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 	}
 	helpInfo.Parse()
 
+	fmt.Printf("%v", os.Args[1:])
+	for _, op := range os.Args[1:] {
+		fmt.Println(op)
+	}
+
 	concatenated := strings.Join(flag.Args(), " ")
 
 	a := []rune(concatenated)
@@ -72,7 +92,7 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 		for i := 0; i < length; {
 			c := a[i]
 			i++
-			if (enableEscapeChars == true || disableEscapeChars == false) && c == '\\' && i < length {
+			if (enableEscapeChars == true && disableEscapeChars == false) && c == '\\' && i < length {
 				c = a[i]
 				i++
 				switch c {
