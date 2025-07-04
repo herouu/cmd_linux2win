@@ -29,7 +29,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /bin/dd
 * [ ] /bin/df
 * [ ] /bin/dir
-* [ ] /bin/echo
+* [x] /bin/echo
 * [x] /bin/false
 * [ ] /bin/ln
 * [ ] /bin/ls
