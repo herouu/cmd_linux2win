@@ -185,7 +185,9 @@ type FlagSet struct {
 // A Flag represents the state of a flag.
 type Flag struct {
 	Name                string              // name as it appears on command line
+	AliasName           string              // alias name as it appears on command line
 	Shorthand           string              // one-letter abbreviated flag
+	AliasShorthand      string              // alias one-letter abbreviated flag
 	Usage               string              // help message
 	Value               Value               // value as set
 	DefValue            string              // default value (as text); for usage message
@@ -709,9 +711,21 @@ func (f *FlagSet) FlagUsagesWrapped(cols int) string {
 
 		line := ""
 		if flag.Shorthand != "" && flag.ShorthandDeprecated == "" {
-			line = fmt.Sprintf("  -%s, --%s", flag.Shorthand, flag.Name)
+			if flag.AliasShorthand != "" && flag.AliasName != "" {
+				line = fmt.Sprintf("  -%s, -%s, --%s, --%s", flag.Shorthand, flag.AliasShorthand, flag.Name, flag.AliasName)
+			} else if flag.AliasShorthand != "" {
+				line = fmt.Sprintf("  -%s, -%s, --%s", flag.Shorthand, flag.AliasShorthand, flag.Name)
+			} else if flag.AliasName != "" {
+				line = fmt.Sprintf("  -%s, --%s, --%s", flag.Shorthand, flag.Name, flag.AliasName)
+			} else {
+				line = fmt.Sprintf("  -%s, --%s", flag.Shorthand, flag.Name)
+			}
 		} else {
-			line = fmt.Sprintf("      --%s", flag.Name)
+			if flag.AliasName != "" {
+				line = fmt.Sprintf("      --%s, --%s", flag.Name, flag.AliasName)
+			} else {
+				line = fmt.Sprintf("      --%s", flag.Name)
+			}
 		}
 
 		varname, usage := UnquoteUsage(flag)
@@ -852,6 +866,21 @@ func (f *FlagSet) VarPF(value Value, name, shorthand, usage string) *Flag {
 		Usage:     usage,
 		Value:     value,
 		DefValue:  value.String(),
+	}
+	f.AddFlag(flag)
+	return flag
+}
+
+func (f *FlagSet) VarPFAlias(value Value, name, shorthand, aliasName, aliasShorthand, usage string) *Flag {
+	// Remember the default value as a string; it won't change.
+	flag := &Flag{
+		Name:           name,
+		Shorthand:      shorthand,
+		Usage:          usage,
+		Value:          value,
+		DefValue:       value.String(),
+		AliasName:      aliasName,
+		AliasShorthand: aliasShorthand,
 	}
 	f.AddFlag(flag)
 	return flag

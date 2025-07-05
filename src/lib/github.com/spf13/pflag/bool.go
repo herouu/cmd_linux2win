@@ -56,6 +56,11 @@ func (f *FlagSet) BoolVarP(p *bool, name, shorthand string, value bool, usage st
 	flag.NoOptDefVal = "true"
 }
 
+func (f *FlagSet) BoolVarPAlias(p *bool, name, shorthand, aliasName, aliasShorthand string, value bool, usage string) {
+	flag := f.VarPFAlias(newBoolValue(value, p), name, shorthand, aliasName, aliasShorthand, usage)
+	flag.NoOptDefVal = "true"
+}
+
 // BoolVar defines a bool flag with specified name, default value, and usage string.
 // The argument p points to a bool variable in which to store the value of the flag.
 func BoolVar(p *bool, name string, value bool, usage string) {
@@ -65,6 +70,11 @@ func BoolVar(p *bool, name string, value bool, usage string) {
 // BoolVarP is like BoolVar, but accepts a shorthand letter that can be used after a single dash.
 func BoolVarP(p *bool, name, shorthand string, value bool, usage string) {
 	flag := CommandLine.VarPF(newBoolValue(value, p), name, shorthand, usage)
+	flag.NoOptDefVal = "true"
+}
+
+func BoolVarPAlias(p *bool, name, shorthand, aliasName, aliseShorthand string, value bool, usage string) {
+	flag := CommandLine.VarPFAlias(newBoolValue(value, p), name, shorthand, aliasName, aliseShorthand, usage)
 	flag.NoOptDefVal = "true"
 }
 
@@ -81,6 +91,12 @@ func (f *FlagSet) BoolP(name, shorthand string, value bool, usage string) *bool 
 	return p
 }
 
+func (f *FlagSet) BoolPAlias(name, shorthand, aliasName, aliasShortName string, value bool, usage string) *bool {
+	p := new(bool)
+	f.BoolVarPAlias(p, name, shorthand, aliasName, aliasShortName, value, usage)
+	return p
+}
+
 // Bool defines a bool flag with specified name, default value, and usage string.
 // The return value is the address of a bool variable that stores the value of the flag.
 func Bool(name string, value bool, usage string) *bool {
@@ -90,5 +106,10 @@ func Bool(name string, value bool, usage string) *bool {
 // BoolP is like Bool, but accepts a shorthand letter that can be used after a single dash.
 func BoolP(name, shorthand string, value bool, usage string) *bool {
 	b := CommandLine.BoolP(name, shorthand, value, usage)
+	return b
+}
+
+func BoolPAlias(name, shorthand, aliasName, aliasShorthand string, value bool, usage string) *bool {
+	b := CommandLine.BoolPAlias(name, shorthand, aliasName, aliasShorthand, value, usage)
 	return b
 }

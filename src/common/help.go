@@ -30,12 +30,14 @@ type HelpInfo struct {
 }
 
 type Option struct {
-	Short       string
-	Verbose     string
-	Description string
-	CmdArr      []Cmd
-	Func        func()
-	BoolVarP    bool
+	Short        string
+	AliasShort   string
+	Verbose      string
+	AliseVerbose string
+	Description  string
+	CmdArr       []Cmd
+	Func         func()
+	BoolVarP     bool
 }
 
 type Cmd struct {
@@ -68,25 +70,30 @@ func (h HelpInfo) Print() {
 
 	// 输出选项列表
 	if len(h.Options) > 0 {
+		// 计算所有选项的最大长度
 		maxFlagLen := 0
 		for _, opt := range h.Options {
-			if len(opt.Verbose) > maxFlagLen {
-				maxFlagLen = len(opt.Verbose)
+			flagStr := getFlagString(opt)
+			if len(flagStr) > maxFlagLen {
+				maxFlagLen = len(flagStr)
 			}
 		}
-		// option选项处理
+
+		// 输出每个选项
 		for _, opt := range h.Options {
-			// 对齐选项描述
-			spacing := strings.Repeat(" ", maxFlagLen-len(opt.Verbose)+2)
-			if opt.Short != "" && opt.Verbose == "" {
-				fmt.Fprintf(os.Stdout, "      -%s    %s%s\n", opt.Short, spacing, opt.Description)
-			} else if opt.Short != "" && opt.Verbose != "" {
-				fmt.Fprintf(os.Stdout, "      -%s, --%s%s%s\n", opt.Short, opt.Verbose, spacing, opt.Description)
-			} else if opt.Short == "" && opt.Verbose != "" {
-				fmt.Fprintf(os.Stdout, "          --%s%s%s\n", opt.Verbose, spacing, opt.Description)
+			flagStr := getFlagString(opt)
+			spacing := strings.Repeat(" ", maxFlagLen-len(flagStr)+2)
+			// 拆分多行描述
+			descLines := strings.Split(opt.Description, "\n")
+			for i, line := range descLines {
+				if i == 0 {
+					fmt.Fprintf(os.Stdout, "  %s%s%s\n", flagStr, spacing, line)
+				} else {
+					fmt.Fprintf(os.Stdout, "  %s%s%s\n", strings.Repeat(" ", len(flagStr)), spacing, line)
+				}
 			}
 		}
-		fmt.Fprintln(os.Stdout)
+		fmt.Println()
 	}
 
 	// 输出注意事项
@@ -100,6 +107,37 @@ func (h HelpInfo) Print() {
 	} else {
 		fmt.Fprint(os.Stdout, Copyright)
 	}
+}
+
+// getFlagString 生成选项的字符串表示
+func getFlagString(opt Option) string {
+	var flags []string
+	if opt.Short != "" {
+		flags = append(flags, "-"+opt.Short)
+	}
+	if opt.AliasShort != "" {
+		flags = append(flags, "-"+opt.AliasShort)
+	}
+	if opt.Verbose != "" {
+		flags = append(flags, "--"+opt.Verbose)
+	}
+	if opt.AliseVerbose != "" {
+		flags = append(flags, "--"+opt.AliseVerbose)
+	}
+
+	needPrefix := len(flags) > 0 && strings.HasPrefix(flags[0], "--")
+	var builder strings.Builder
+	if needPrefix {
+		builder.WriteString("    ")
+	}
+	for i, flag := range flags {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(flag)
+	}
+	join := builder.String()
+	return join
 }
 
 func (h HelpInfo) Parse() []FlagOption {
@@ -122,7 +160,7 @@ func (h HelpInfo) Parse() []FlagOption {
 	for _, opt := range h.Options {
 		var verbose bool
 
-		flag.BoolVarP(&verbose, opt.Verbose, opt.Short, opt.BoolVarP, opt.Description)
+		flag.BoolVarPAlias(&verbose, opt.Verbose, opt.Short, opt.AliasShort, opt.AliseVerbose, opt.BoolVarP, opt.Description)
 
 		if len(opt.CmdArr) != 0 {
 			for _, per := range opt.CmdArr {
@@ -137,7 +175,7 @@ func (h HelpInfo) Parse() []FlagOption {
 
 	flag.Parse()
 	for i := range sliceOption {
-		if *sliceOption[i].Flag {
+		if *sliceOption[i].Flag && sliceOption[i].Opt.Func != nil {
 			sliceOption[i].Opt.Func()
 		}
 	}
@@ -147,4 +185,13 @@ func (h HelpInfo) Parse() []FlagOption {
 func Version(cmdName string) string {
 	const version = "%s (Go coreutils) 1.0%s"
 	return fmt.Sprintf(version, cmdName, Copyright)
+}
+
+func GetBool(nameOrShort string) bool {
+	f1 := flag.Lookup(nameOrShort)
+	f2 := flag.ShorthandLookup(nameOrShort)
+	if (f1 != nil && f1.Value.String() == "true") || (f2 != nil && f2.Value.String() == "true") {
+		return true
+	}
+	return false
 }
