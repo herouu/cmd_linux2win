@@ -188,9 +188,15 @@ func Version(cmdName string) string {
 }
 
 func GetBool(nameOrShort string) bool {
-	f1 := flag.Lookup(nameOrShort)
-	f2 := flag.ShorthandLookup(nameOrShort)
-	if (f1 != nil && f1.Value.String() == "true") || (f2 != nil && f2.Value.String() == "true") {
+	var f2 *flag.Flag
+	if len(nameOrShort) == 1 {
+		// 如果是单字符短选项，查找对应的短选项
+		f2 = flag.ShorthandLookup(nameOrShort)
+	} else {
+		// 如果是长选项，查找对应的长选项
+		f2 = flag.Lookup(nameOrShort)
+	}
+	if f2 != nil && f2.Value.String() == "true" {
 		return true
 	}
 	return false
