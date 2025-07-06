@@ -4,6 +4,7 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -33,11 +34,13 @@ type Option struct {
 	Short        string
 	AliasShort   string
 	Verbose      string
+	VerboseUsage string // 用于描述的用法
 	AliseVerbose string
 	Description  string
 	CmdArr       []Cmd
 	Func         func()
-	BoolVarP     bool
+	DefaultP     string // 默认参数值
+	Type         string // 参数类型，默认为bool
 }
 
 type Cmd struct {
@@ -119,7 +122,11 @@ func getFlagString(opt Option) string {
 		flags = append(flags, "-"+opt.AliasShort)
 	}
 	if opt.Verbose != "" {
-		flags = append(flags, "--"+opt.Verbose)
+		if opt.Type == "string" && opt.VerboseUsage != "" {
+			flags = append(flags, "--"+opt.Verbose+"="+strings.ToUpper(opt.VerboseUsage))
+		} else {
+			flags = append(flags, "--"+opt.Verbose)
+		}
 	}
 	if opt.AliseVerbose != "" {
 		flags = append(flags, "--"+opt.AliseVerbose)
@@ -158,19 +165,31 @@ func (h HelpInfo) Parse() []FlagOption {
 
 	var sliceOption []FlagOption
 	for _, opt := range h.Options {
-		var verbose bool
 
-		flag.BoolVarPAlias(&verbose, opt.Verbose, opt.Short, opt.AliasShort, opt.AliseVerbose, opt.BoolVarP, opt.Description)
-
-		if len(opt.CmdArr) != 0 {
-			for _, per := range opt.CmdArr {
-				flag.BoolVarP(&verbose, per.Long, per.Short, false, opt.Description)
-			}
+		if opt.Type == "" {
+			opt.Type = "bool"
 		}
-		sliceOption = append(sliceOption, FlagOption{
-			Opt:  opt,
-			Flag: &verbose,
-		})
+
+		if opt.Type == "bool" {
+			var verbose bool
+			var defaultBoolP bool
+			if opt.DefaultP != "" {
+				defaultBoolP, _ = strconv.ParseBool(opt.DefaultP)
+			}
+			flag.BoolVarPAlias(&verbose, opt.Verbose, opt.Short, opt.AliasShort, opt.AliseVerbose, defaultBoolP, opt.Description)
+			if len(opt.CmdArr) != 0 {
+				for _, per := range opt.CmdArr {
+					flag.BoolVarP(&verbose, per.Long, per.Short, false, opt.Description)
+				}
+			}
+			sliceOption = append(sliceOption, FlagOption{
+				Opt:  opt,
+				Flag: &verbose,
+			})
+		} else if opt.Type == "string" {
+			var verbose string
+			flag.StringVarP(&verbose, opt.Verbose, opt.Short, opt.DefaultP, opt.Description)
+		}
 	}
 
 	flag.Parse()
@@ -200,4 +219,17 @@ func GetBool(nameOrShort string) bool {
 		return true
 	}
 	return false
+}
+
+func GetString(nameOrShort string) string {
+	var f2 *flag.Flag
+	if len(nameOrShort) == 1 {
+		// 如果是单字符短选项，查找对应的短选项
+		f2 = flag.ShorthandLookup(nameOrShort)
+	} else {
+		// 如果是长选项，查找对应的长选项
+		f2 = flag.Lookup(nameOrShort)
+	}
+	return f2.Value.String()
+
 }

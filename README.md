@@ -53,7 +53,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/b2sum
 * [ ] /usr/bin/base32
 * [ ] /usr/bin/base64
-* [ ] /usr/bin/basename
+* [x] /usr/bin/basename
 * [ ] /usr/bin/chcon
 * [ ] /usr/bin/cksum
 * [ ] /usr/bin/comm

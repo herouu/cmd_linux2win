@@ -11,11 +11,12 @@ import (
 
 var cmdName = "sleep"
 
+//	os.Args = []string{
+//		os.Args[0],
+//		"1s", "20s",
+//	}
 func main() {
-	os.Args = []string{
-		os.Args[0],
-		"1s", "20s",
-	}
+
 	helpInfo := common.HelpInfo{
 		Name: os.Args[0],
 		UsageLines: []string{
