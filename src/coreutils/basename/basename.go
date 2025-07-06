@@ -53,8 +53,7 @@ Mandatory arguments to long options are mandatory for short options too.`,
 	// 获取命令行参数
 	args := flag.Args()
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "missing operand")
-		flag.Usage()
+		fmt.Fprintf(os.Stdout, "%s: missing operand\nTry '%s --help' for more information.", os.Args[0], os.Args[0])
 		os.Exit(1)
 	}
 
