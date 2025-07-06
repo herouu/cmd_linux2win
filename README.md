@@ -41,12 +41,12 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /bin/readlink
 * [ ] /bin/rm
 * [ ] /bin/rmdir
-* [ ] /bin/sleep
+* [x] /bin/sleep
 * [ ] /bin/stty
 * [ ] /bin/sync
 * [ ] /bin/touch
 * [x] /bin/true
-* [ ] /bin/uname
+* [x] /bin/uname
 * [ ] /bin/vdir
 * [ ] /usr/bin/[
 * [ ] /usr/bin/arch
