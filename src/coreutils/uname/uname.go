@@ -4,19 +4,16 @@ import (
 	"cmd_linux2win/src/common"
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
-	"github.com/elastic/go-sysinfo"
+	"github.com/shirou/gopsutil/host"
+	"golang.org/x/sys/windows/registry"
 	"os"
-	"runtime"
 	"strings"
+	"time"
 )
 
 const cmdName = "uname"
 
 func main() {
-	os.Args = []string{
-		os.Args[0],
-		"--all",
-	}
 	helpInfo := common.HelpInfo{
 		Name:        os.Args[0],
 		UsageLines:  []string{"[OPTION]..."},
@@ -73,35 +70,43 @@ func main() {
 
 	var results []string
 
-	self, _ := sysinfo.Host()
-	fmt.Printf("%v", self)
+	info, _ := host.Info()
 	if kernelName {
-		results = append(results, "Windows") // 硬编码为 Windows，因为使用了 Windows API
+		results = append(results, info.OS) // 硬编码为 Windows，因为使用了 Windows API
 	}
 
 	if nodename {
-		hostname, err := os.Hostname()
-		if err == nil {
-			results = append(results, hostname)
-		}
+		results = append(results, info.Hostname)
+	}
+
+	if kernelRelease {
+		results = append(results, info.KernelVersion)
+	}
+
+	if kernelVersion {
+		key, _ := registry.OpenKey(registry.LOCAL_MACHINE,
+			`SOFTWARE\Microsoft\Windows NT\CurrentVersion`,
+			registry.QUERY_VALUE)
+		defer key.Close()
+		installTimeStamp, _, _ := key.GetIntegerValue("InstallDate")
+		installTime := time.Unix(int64(installTimeStamp), 0)
+		results = append(results, installTime.Format(time.DateTime))
 	}
 
 	if machine {
-		results = append(results, runtime.GOARCH)
+		results = append(results, info.KernelArch)
 	}
 
 	if processor {
-		// Windows 下难以获取处理器类型，暂留空
-		results = append(results, "unknown")
+		results = append(results, info.KernelArch)
 	}
 
 	if hardwarePlatform {
-		// Windows 下难以获取硬件平台，暂留空
-		results = append(results, "unknown")
+		results = append(results, info.KernelArch)
 	}
 
 	if operatingSystem {
-		results = append(results, "Windows")
+		results = append(results, info.Platform)
 	}
 
 	fmt.Println(strings.Join(results, " "))
