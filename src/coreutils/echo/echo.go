@@ -11,8 +11,6 @@ import (
 var cmdName = "echo"
 
 func main() {
-	enableEscapeChars := false
-	omitNewline := false
 
 	helpInfo := common.HelpInfo{
 		Name: os.Args[0],
@@ -22,15 +20,9 @@ func main() {
 		},
 		Description: "Echo the STRING(s) to standard output.",
 		Options: []common.Option{
-			{Verbose: "n", Short: "n", Description: "do not output the trailing newline", Func: func() {
-				omitNewline = true
-			}},
-			{Verbose: "e", Short: "e", Description: "enable interpretation of backslash escapes", Func: func() {
-				enableEscapeChars = true
-			}},
-			{Verbose: "E", Short: "E", Description: "disable interpretation of backslash escapes (default)", Func: func() {
-				enableEscapeChars = false
-			}},
+			{Verbose: "n", Short: "n", Description: "do not output the trailing newline"},
+			{Verbose: "e", Short: "e", Description: "enable interpretation of backslash escapes"},
+			{Verbose: "E", Short: "E", Description: "disable interpretation of backslash escapes (default)"},
 			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 				os.Exit(0)
@@ -82,11 +74,18 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 
 	ai := 0
 
+	var enableEscapeChars bool
+	if common.GetBool("e") || !common.GetBool("E") {
+		enableEscapeChars = true
+	} else {
+		enableEscapeChars = false
+	}
+
 	if length != 0 {
 		for i := 0; i < length; {
 			c := a[i]
 			i++
-			if (enableEscapeChars == true) && c == '\\' && i < length {
+			if (enableEscapeChars) && c == '\\' && i < length {
 				c = a[i]
 				i++
 				switch c {
@@ -128,7 +127,7 @@ Try '%s --help' for more information.`, os.Args[0], f, os.Args[0])
 		}
 	}
 	os.Stdout.WriteString(string(a[:ai]))
-	if omitNewline == false {
+	if common.GetBool("n") == false {
 		fmt.Print("\n")
 	}
 
