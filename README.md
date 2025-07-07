@@ -118,7 +118,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/unexpand
 * [ ] /usr/bin/uniq
 * [ ] /usr/bin/unlink
-* [ ] /usr/bin/users
+* [x] /usr/bin/users
 * [ ] /usr/bin/wc
 * [ ] /usr/bin/who
 * [x] /usr/bin/whoami
