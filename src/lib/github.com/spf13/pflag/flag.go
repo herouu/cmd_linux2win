@@ -894,9 +894,14 @@ func (f *FlagSet) VarP(value Value, name, shorthand, usage string) {
 // AddFlag will add the flag to the FlagSet
 func (f *FlagSet) AddFlag(flag *Flag) {
 	normalizedFlagName := f.normalizeFlagName(flag.Name)
-
 	_, alreadyThere := f.formal[normalizedFlagName]
-	if alreadyThere {
+	var alreadyThereAlias bool
+	var normalizedFlagNameAlias NormalizedName
+	if flag.AliasName != "" {
+		normalizedFlagNameAlias = f.normalizeFlagName(flag.AliasName)
+		_, alreadyThereAlias = f.formal[normalizedFlagNameAlias]
+	}
+	if alreadyThere || alreadyThereAlias {
 		msg := fmt.Sprintf("%s flag redefined: %s", f.name, flag.Name)
 		fmt.Fprintln(f.Output(), msg)
 		panic(msg) // Happens only if flags are declared with identical names
@@ -907,6 +912,9 @@ func (f *FlagSet) AddFlag(flag *Flag) {
 
 	flag.Name = string(normalizedFlagName)
 	f.formal[normalizedFlagName] = flag
+	if flag.AliasName != "" {
+		f.formal[normalizedFlagNameAlias] = flag
+	}
 	f.orderedFormal = append(f.orderedFormal, flag)
 
 	if flag.Shorthand == "" {

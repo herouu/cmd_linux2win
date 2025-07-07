@@ -176,7 +176,7 @@ func (h HelpInfo) Parse() []FlagOption {
 			if opt.DefaultP != "" {
 				defaultBoolP, _ = strconv.ParseBool(opt.DefaultP)
 			}
-			flag.BoolVarPAlias(&verbose, opt.Verbose, opt.Short, opt.AliasShort, opt.AliseVerbose, defaultBoolP, opt.Description)
+			flag.BoolVarPAlias(&verbose, opt.Verbose, opt.Short, opt.AliseVerbose, opt.AliasShort, defaultBoolP, opt.Description)
 			if len(opt.CmdArr) != 0 {
 				for _, per := range opt.CmdArr {
 					flag.BoolVarP(&verbose, per.Long, per.Short, false, opt.Description)
