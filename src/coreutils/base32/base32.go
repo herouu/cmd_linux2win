@@ -20,7 +20,7 @@ var cmdName = "base32"
 
 func main() {
 	//os.Args = []string{
-	//	os.Args[0], "C:\\Users\\developer\\Desktop\\1.txt",
+	//	os.Args[0], "1",
 	//}
 	helpInfo := common.HelpInfo{
 		Name:       os.Args[0],
@@ -51,7 +51,7 @@ Mandatory arguments to long options are mandatory for short options too.`,
 	} else {
 		file, err := os.Open(flag.Arg(0))
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", cmdName, err)
+			fmt.Fprintf(os.Stdout, "%s: %s: No such file or directory", os.Args[0], flag.Arg(0))
 			os.Exit(1)
 		}
 		defer file.Close()
@@ -71,11 +71,11 @@ Mandatory arguments to long options are mandatory for short options too.`,
 		reader := base32.NewDecoder(decoder, input)
 		_, err := io.Copy(output, reader)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s: %v\n", cmdName, err)
+			fmt.Fprintf(os.Stderr, "%s: %v", cmdName, err)
 			os.Exit(1)
 		}
 	} else {
-		var writer io.Writer = output
+		var writer = output
 		if wrap > 0 {
 			writer = &wrappedWriter{w: output, wrap: wrap}
 		}
