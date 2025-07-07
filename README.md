@@ -60,7 +60,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/csplit
 * [ ] /usr/bin/cut
 * [ ] /usr/bin/dircolors
-* [ ] /usr/bin/dirname
+* [x] /usr/bin/dirname
 * [ ] /usr/bin/du
 * [ ] /usr/bin/env
 * [ ] /usr/bin/expand
@@ -114,7 +114,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/tr
 * [ ] /usr/bin/truncate
 * [ ] /usr/bin/tsort
-* [ ] /usr/bin/tty
+* [x] /usr/bin/tty
 * [ ] /usr/bin/unexpand
 * [ ] /usr/bin/uniq
 * [ ] /usr/bin/unlink

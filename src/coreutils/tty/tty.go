@@ -12,9 +12,9 @@ import (
 var cmdName = "tty"
 
 func main() {
-	os.Args = []string{
-		os.Args[0], "-s",
-	}
+	//os.Args = []string{
+	//	os.Args[0], "-s",
+	//}
 	helpInfo := common.HelpInfo{
 		Name:        os.Args[0],
 		UsageLines:  []string{"[OPTION]..."},
