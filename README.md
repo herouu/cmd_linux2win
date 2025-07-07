@@ -49,9 +49,9 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [x] /bin/uname
 * [ ] /bin/vdir
 * [ ] /usr/bin/[
-* [ ] /usr/bin/arch
+* [x] /usr/bin/arch
 * [ ] /usr/bin/b2sum
-* [ ] /usr/bin/base32
+* [x] /usr/bin/base32
 * [ ] /usr/bin/base64
 * [x] /usr/bin/basename
 * [ ] /usr/bin/chcon

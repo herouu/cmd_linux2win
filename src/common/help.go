@@ -233,3 +233,17 @@ func GetString(nameOrShort string) string {
 	return f2.Value.String()
 
 }
+
+func GetInt(nameOrShort string) int {
+	var f2 *flag.Flag
+	if len(nameOrShort) == 1 {
+		// 如果是单字符短选项，查找对应的短选项
+		f2 = flag.ShorthandLookup(nameOrShort)
+	} else {
+		// 如果是长选项，查找对应的长选项
+		f2 = flag.Lookup(nameOrShort)
+	}
+	num, _ := strconv.Atoi(f2.Value.String())
+	return num
+
+}
