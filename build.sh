@@ -2,11 +2,14 @@
 
 # 启用错误捕获
 set -e
-# 检测是否为 Cygwin 环境
-if [ -n "$(uname -a | grep -i cygwin)" ]; then
-    echo "当前处于 Cygwin 环境，继续执行构建流程。"
+# 判断是否是 Windows 下 shell 可运行环境
+system_info=$(uname -a | tr '[:upper:]' '[:lower:]')
+if [[ $system_info == *"cygwin"* || $system_info == *"mingw"* || $system_info == *"msys"* ]]; then
+    echo "当前处于 Windows 下 Cygwin/MinGW/MSYS 环境，继续执行脚本。"
+elif [[ $system_info == *"microsoft"* ]]; then
+    echo "当前处于 Windows 下 WSL 环境，继续执行脚本。"
 else
-    echo "当前不是 Cygwin 环境, 请使用 Cygwin 环境执行脚本。"
+    echo "当前不是 Windows 下 shell 可运行环境，请使用 Cygwin、MinGW、MSYS 或 WSL 环境执行脚本。"
     exit 1
 fi
 # 定义coreutils目录路径
