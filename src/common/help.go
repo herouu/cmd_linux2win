@@ -4,6 +4,7 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -41,6 +42,7 @@ type Option struct {
 	Func         func()
 	DefaultP     string // 默认参数值
 	Type         string // 参数类型，默认为bool
+	Default      interface{}
 }
 
 type Cmd struct {
@@ -189,6 +191,12 @@ func (h HelpInfo) Parse() []FlagOption {
 		} else if opt.Type == "string" {
 			var verbose string
 			flag.StringVarP(&verbose, opt.Verbose, opt.Short, opt.DefaultP, opt.Description)
+		} else if opt.Type == "int" {
+			var verbose int
+			if opt.Default != nil {
+				verbose = int(reflect.ValueOf(opt.Default).Int())
+			}
+			flag.IntVarP(&verbose, opt.Verbose, opt.Short, verbose, opt.Description)
 		}
 	}
 

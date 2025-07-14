@@ -16,16 +16,29 @@ type wrappedWriter struct {
 	cnt  int
 }
 
+// MockReader 自定义的模拟读取器
+type MockReader struct {
+	data []byte
+	pos  int
+}
+
+// Read 实现 io.Reader 接口
+func (mr *MockReader) Read(p []byte) (n int, err error) {
+	if mr.pos >= len(mr.data) {
+		return 0, io.EOF
+	}
+	n = copy(p, mr.data[mr.pos:])
+	mr.pos += n
+	return n, nil
+}
+
 var cmdName = "base32"
 
 func main() {
-	//os.Args = []string{
-	//	os.Args[0], "1",
-	//}
 	helpInfo := common.HelpInfo{
 		Name:       os.Args[0],
 		UsageLines: []string{"[OPTION]... [FILE]"},
-		Description: `Base32 encode or decode FILE, or standard input, to standard output.
+		Description: `Base32 encode or decode F LE, or standard input, to standard output.
 
 With no FILE, or when FILE is -, read standard input.
 
@@ -33,7 +46,7 @@ Mandatory arguments to long options are mandatory for short options too.`,
 		Options: []common.Option{
 			{Verbose: "decode", Short: "d", Description: "decode data"},
 			{Verbose: "ignore-garbage", Short: "i", Description: "when decoding, ignore non-alphabet characters"},
-			{Verbose: "wrap", Short: "w", Description: "wrap encoded lines after COLS character (default 76).\n Use 0 to disable line wrapping", DefaultP: "COLS"},
+			{Verbose: "wrap", Short: "w", Description: "wrap encoded lines after COLS character (default 76).\n Use 0 to disable line wrapping", DefaultP: "COLS", Type: "int", Default: 76},
 			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 				os.Exit(0)
@@ -48,6 +61,9 @@ Mandatory arguments to long options are mandatory for short options too.`,
 	var input io.Reader
 	if flag.NArg() == 0 || flag.Arg(0) == "-" {
 		input = os.Stdin
+	} else if flag.NArg() == 1 {
+		arg0 := flag.Arg(0) + "\n"
+		input = &MockReader{data: []byte(arg0)}
 	} else {
 		file, err := os.Open(flag.Arg(0))
 		if err != nil {
@@ -75,7 +91,7 @@ Mandatory arguments to long options are mandatory for short options too.`,
 			os.Exit(1)
 		}
 	} else {
-		var writer = output
+		var writer io.Writer = output
 		if wrap > 0 {
 			writer = &wrappedWriter{w: output, wrap: wrap}
 		}
@@ -85,7 +101,10 @@ Mandatory arguments to long options are mandatory for short options too.`,
 			fmt.Fprintf(os.Stderr, "%s: %v\n", cmdName, err)
 			os.Exit(1)
 		}
-		encoder.Close()
+		if err := encoder.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "%s: %v\n", cmdName, err)
+			os.Exit(1)
+		}
 	}
 
 }
