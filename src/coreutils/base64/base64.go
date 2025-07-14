@@ -3,7 +3,7 @@ package main
 import (
 	"cmd_linux2win/src/common"
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
-	"encoding/base32"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -32,13 +32,13 @@ func (mr *MockReader) Read(p []byte) (n int, err error) {
 	return n, nil
 }
 
-var cmdName = "base32"
+var cmdName = "base64"
 
 func main() {
 	helpInfo := common.HelpInfo{
 		Name:       os.Args[0],
 		UsageLines: []string{"[OPTION]... [FILE]"},
-		Description: `Base32 encode or decode F LE, or standard input, to standard output.
+		Description: `base64 encode or decode F LE, or standard input, to standard output.
 
 With no FILE, or when FILE is -, read standard input.
 
@@ -55,9 +55,9 @@ Mandatory arguments to long options are mandatory for short options too.`,
 				fmt.Print(common.Version(cmdName))
 			}},
 		},
-		Note: `The data are encoded as described for the base32 alphabet in RFC 4648.
+		Note: `The data are encoded as described for the base64 alphabet in RFC 4648.
 When decoding, the input may contain newlines in addition to the bytes of
-the formal base32 alphabet.  Use --ignore-garbage to attempt to recover
+the formal base64 alphabet.  Use --ignore-garbage to attempt to recover
 from any other non-alphabet bytes in the encoded stream.`,
 	}
 	helpInfo.Parse()
@@ -84,11 +84,11 @@ from any other non-alphabet bytes in the encoded stream.`,
 
 	var output io.Writer = os.Stdout
 	if decode {
-		decoder := base32.StdEncoding
+		decoder := base64.StdEncoding
 		if ignoreGarbage {
-			decoder = decoder.WithPadding(base32.NoPadding)
+			decoder = decoder.WithPadding(base64.NoPadding)
 		}
-		reader := base32.NewDecoder(decoder, input)
+		reader := base64.NewDecoder(decoder, input)
 		_, err := io.Copy(output, reader)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v", cmdName, err)
@@ -99,7 +99,7 @@ from any other non-alphabet bytes in the encoded stream.`,
 		if wrap > 0 {
 			writer = &wrappedWriter{w: output, wrap: wrap}
 		}
-		encoder := base32.NewEncoder(base32.StdEncoding, writer)
+		encoder := base64.NewEncoder(base64.StdEncoding, writer)
 		_, err := io.Copy(encoder, input)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%s: %v\n", cmdName, err)
