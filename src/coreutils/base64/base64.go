@@ -9,29 +9,6 @@ import (
 	"os"
 )
 
-// wrappedWriter 实现行包装功能
-type wrappedWriter struct {
-	w    io.Writer
-	wrap int
-	cnt  int
-}
-
-// MockReader 自定义的模拟读取器
-type MockReader struct {
-	data []byte
-	pos  int
-}
-
-// Read 实现 io.Reader 接口
-func (mr *MockReader) Read(p []byte) (n int, err error) {
-	if mr.pos >= len(mr.data) {
-		return 0, io.EOF
-	}
-	n = copy(p, mr.data[mr.pos:])
-	mr.pos += n
-	return n, nil
-}
-
 var cmdName = "base64"
 
 func main() {
@@ -67,7 +44,7 @@ from any other non-alphabet bytes in the encoded stream.`,
 		input = os.Stdin
 	} else if flag.NArg() == 1 {
 		arg0 := flag.Arg(0) + "\n"
-		input = &MockReader{data: []byte(arg0)}
+		input = &common.MockReader{Data: []byte(arg0)}
 	} else {
 		file, err := os.Open(flag.Arg(0))
 		if err != nil {
@@ -97,7 +74,7 @@ from any other non-alphabet bytes in the encoded stream.`,
 	} else {
 		var writer io.Writer = output
 		if wrap > 0 {
-			writer = &wrappedWriter{w: output, wrap: wrap}
+			writer = &common.WrappedWriter{W: output, Wrap: wrap}
 		}
 		encoder := base64.NewEncoder(base64.StdEncoding, writer)
 		_, err := io.Copy(encoder, input)
@@ -111,22 +88,4 @@ from any other non-alphabet bytes in the encoded stream.`,
 		}
 	}
 
-}
-
-func (w *wrappedWriter) Write(p []byte) (n int, err error) {
-	var total int
-	for i := 0; i < len(p); i++ {
-		if w.cnt > 0 && w.cnt%w.wrap == 0 {
-			if _, err := w.w.Write([]byte{'\n'}); err != nil {
-				return total, err
-			}
-			w.cnt = 0
-		}
-		if _, err := w.w.Write(p[i : i+1]); err != nil {
-			return total, err
-		}
-		w.cnt++
-		total++
-	}
-	return total, nil
 }
