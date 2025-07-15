@@ -5,19 +5,19 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 const cmdName = "pwd"
 
 func main() {
-
 	helpInfo := common.HelpInfo{
 		Name:        os.Args[0],
 		UsageLines:  []string{"[OPTION]... [FILE]"},
 		Description: `Print the full filename of the current working directory.`,
 		Options: []common.Option{
-			{Verbose: "logical", Short: "L", Description: "use PWD from environment, even if it contains symlinks"},
-			{Verbose: "physical", Short: "P", Description: "avoid all symlinks"},
+			{Verbose: "logical", Short: "L", Description: "use PWD from environment, even if it contains symlinks", Default: false},
+			{Verbose: "physical", Short: "P", Description: "avoid all symlinks", Default: true},
 			{Verbose: "help", Description: "display this help and exit", Func: func() {
 				flag.Usage()
 				os.Exit(0)
@@ -34,4 +34,28 @@ the version described here.  Please refer to your shell's documentation
 for details about the options it supports.`,
 	}
 	helpInfo.Parse()
+
+	logical := common.GetBool("logical")
+	physical := common.GetBool("physical")
+
+	if logical {
+		dir := getDir()
+		fmt.Println(dir)
+	} else if physical {
+		dir := getDir()
+		symlinks, _ := filepath.EvalSymlinks(dir)
+		fmt.Println(symlinks)
+	} else {
+		dir := getDir()
+		fmt.Println(dir)
+	}
+
+}
+
+func getDir() string {
+	if os.Getenv("PWD") != "" {
+		return os.Getenv("PWD")
+	}
+	dir, _ := os.Getwd()
+	return dir
 }
