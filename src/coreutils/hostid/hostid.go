@@ -3,9 +3,8 @@ package main
 import (
 	"cmd_linux2win/src/common"
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
-	"encoding/hex"
+	"encoding/binary"
 	"fmt"
-	"github.com/shirou/gopsutil/disk"
 	"net"
 	"os"
 )
@@ -30,41 +29,69 @@ func main() {
 	}
 	helpInfo.Parse()
 
-	id, _ := getWindowsHostID()
-	fmt.Println(id)
+	id, _ := GetHostID()
+	fmt.Printf("%08x\n", id)
 }
 
-func getWindowsHostID() (string, error) {
-	// 使用 WMI 获取主板 UUID（需要管理员权限，或通过注册表）
-	// 简化方案：使用系统盘的 UUID
-	disks, err := disk.Partitions(false)
-	if err != nil {
-		return "", err
+// GetHostID 模拟 gethostid() 功能
+func GetHostID() (uint32, error) {
+	// 1. 尝试读取 /etc/hostid 文件（类 Unix 系统）
+	id, err := readHostIDFile("/etc/hostid")
+	if err == nil {
+		return id, nil
 	}
-	for _, d := range disks {
-		if d.Mountpoint == "C:" { // 假设系统盘为 C 盘
-			info, err := disk.Usage(d.Mountpoint)
-			if err == nil && info.Fstype != "" {
-				return info.Fstype[:8], nil
-			}
-		}
-	}
-	return getMacBasedHostID()
+
+	// 2. 读取失败时，基于主机名和IP生成标识
+	return generateHostIDFromNetwork()
 }
 
-// 通用 fallback：基于网卡 MAC 地址生成
-func getMacBasedHostID() (string, error) {
-	// 获取所有网卡 MAC 地址
-	interfaces, err := net.Interfaces()
+// 从 /etc/hostid 文件读取主机ID
+func readHostIDFile(path string) (uint32, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
-	for _, iface := range interfaces {
-		if iface.Flags&net.FlagLoopback == 0 && len(iface.HardwareAddr) > 0 {
-			// 取 MAC 地址前 4 字节，转换为 8 位 16 进制
-			mac := iface.HardwareAddr[:4]
-			return hex.EncodeToString(mac), nil
+
+	// /etc/hostid 通常存储 32 位或 64 位二进制数据
+	if len(data) >= 4 {
+		return binary.BigEndian.Uint32(data[:4]), nil
+	}
+
+	return 0, fmt.Errorf("invalid hostid file")
+}
+
+// 基于网络信息生成主机ID
+func generateHostIDFromNetwork() (uint32, error) {
+	// 获取主机名
+	hostname, err := os.Hostname()
+	if err != nil {
+		return 0, err
+	}
+
+	// 解析主机名对应的IP地址
+	addrs, err := net.LookupIP(hostname)
+	if err != nil || len(addrs) == 0 {
+		return 0, fmt.Errorf("failed to resolve hostname: %v", err)
+	}
+
+	// 优先使用IPv4地址
+	var ipv4 net.IP
+	for _, addr := range addrs {
+		if ip := addr.To4(); ip != nil {
+			ipv4 = ip
 		}
 	}
-	return "", fmt.Errorf("no valid network interface found")
+
+	// 如果没有IPv4，使用第一个IPv6地址
+	if ipv4 == nil && len(addrs) > 0 {
+		ipv4 = addrs[0].To4() // 可能为nil，但会在后续处理
+	}
+
+	if ipv4 == nil {
+		return 0, fmt.Errorf("no valid IP address found")
+	}
+
+	// 将IP地址转换为32位整数并进行位运算（类似glibc实现）
+	ipInt := binary.BigEndian.Uint32(ipv4)
+	return (ipInt << 16) | (ipInt >> 16), nil
 }
