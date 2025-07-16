@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 const cmdName = "pwd"
@@ -37,7 +38,7 @@ for details about the options it supports.`,
 
 	logical := common.GetBool("logical")
 	physical := common.GetBool("physical")
-
+	fmt.Println(runtime.GOOS)
 	if logical {
 		dir := getDir()
 		fmt.Println(dir)
@@ -56,6 +57,10 @@ func getDir() string {
 	if os.Getenv("PWD") != "" {
 		return os.Getenv("PWD")
 	}
-	dir, _ := os.Getwd()
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	return dir
 }

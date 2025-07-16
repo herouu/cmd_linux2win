@@ -13,13 +13,15 @@ else
     exit 1
 fi
 # 定义coreutils目录路径
-coreutilsDir="src/coreutils"
+directories=("src/coreutils" "src/menet" "src/procps" "src/other" "src/net-tools")
 
 # 检查coreutils目录是否存在
-if [ ! -d "$coreutilsDir" ]; then
-    echo "coreutils目录不存在，请检查路径。" >&2
+for dir in "${directories[@]}"; do
+if [ ! -d "$dir" ]; then
+    echo "$dir目录不存在，请检查路径。" >&2
     exit 1
 fi
+done
 
 # 创建输出目录
 outputDir="bin"
@@ -31,8 +33,9 @@ fi
 # 初始化错误标志
 buildErrors=0
 
-# 遍历coreutils目录及其子目录下的所有.go文件
-find "$coreutilsDir" -name "*.go" | while read -r goFile; do
+# 遍历所有指定目录及其子目录下的所有.go文件
+for dir in "${directories[@]}"; do
+find "$dir" -name "*.go" | while read -r goFile; do
     # 获取文件名（不包含扩展名）
     fileName=$(basename "$goFile" .go)
     # 定义输出的二进制文件路径
@@ -46,6 +49,7 @@ find "$coreutilsDir" -name "*.go" | while read -r goFile; do
     else
         echo "成功构建 $outputPath"
     fi
+  done
 done
 
 # 根据构建结果返回适当的退出码

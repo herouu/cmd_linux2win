@@ -37,7 +37,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /bin/mknod
 * [ ] /bin/mktemp
 * [ ] /bin/mv
-* [ ] /bin/pwd
+* [x] /bin/pwd
 * [ ] /bin/readlink
 * [ ] /bin/rm
 * [ ] /bin/rmdir
