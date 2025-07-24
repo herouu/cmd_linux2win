@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # 启用错误捕获
 set -e
 # 判断是否是 Windows 下 shell 可运行环境
@@ -13,7 +12,8 @@ else
     exit 1
 fi
 # 定义coreutils目录路径
-directories=("src/coreutils" "src/menet" "src/procps" "src/other" "src/net-tools")
+scriptDir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+directories=("$scriptDir/src/coreutils" "$scriptDir/src/menet" "$scriptDir/src/procps" "$scriptDir/src/other" "$scriptDir/src/net-tools")
 
 # 检查coreutils目录是否存在
 for dir in "${directories[@]}"; do
@@ -35,7 +35,8 @@ buildErrors=0
 
 # 遍历所有指定目录及其子目录下的所有.go文件
 for dir in "${directories[@]}"; do
-find "$dir" -name "*.go" | while read -r goFile; do
+echo "正在处理目录: $dir"
+/usr/bin/find "$dir" -type f -name "*.go" | while read -r goFile; do
     # 获取文件名（不包含扩展名）
     fileName=$(basename "$goFile" .go)
     # 定义输出的二进制文件路径
