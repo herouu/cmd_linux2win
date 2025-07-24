@@ -5,8 +5,9 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"encoding/binary"
 	"fmt"
-	"net"
 	"os"
+	"syscall"
+	"unsafe"
 )
 
 var cmdName = "hostid"
@@ -42,7 +43,7 @@ func GetHostID() (uint32, error) {
 	}
 
 	// 2. 读取失败时，基于主机名和IP生成标识
-	return generateHostIDFromNetwork()
+	return uint32(getHostIDLikeMsys2()), nil
 }
 
 // 从 /etc/hostid 文件读取主机ID
@@ -60,38 +61,64 @@ func readHostIDFile(path string) (uint32, error) {
 	return 0, fmt.Errorf("invalid hostid file")
 }
 
-// 基于网络信息生成主机ID
-func generateHostIDFromNetwork() (uint32, error) {
-	// 获取主机名
-	hostname, err := os.Hostname()
+func getHostIDLikeMsys2() int32 {
+	// 初始哈希种子，与C代码保持一致
+	hostid := int32(0x40291372)
+
+	// 读取注册表中的MachineGuid
+	guid, err := getMachineGUID()
 	if err != nil {
-		return 0, err
+		// 如果读取失败，使用默认GUID
+		guid = "00000000-0000-0000-0000-000000000000"
 	}
 
-	// 解析主机名对应的IP地址
-	addrs, err := net.LookupIP(hostname)
-	if err != nil || len(addrs) == 0 {
-		return 0, fmt.Errorf("failed to resolve hostname: %v", err)
+	// 应用SDBM哈希算法
+	for _, r := range guid {
+		// 与C代码中的哈希逻辑完全一致：hostid = *wp + (hostid << 6) + (hostid << 16) - hostid
+		hostid = int32(r) + (hostid << 6) + (hostid << 16) - hostid
 	}
 
-	// 优先使用IPv4地址
-	var ipv4 net.IP
-	for _, addr := range addrs {
-		if ip := addr.To4(); ip != nil {
-			ipv4 = ip
-		}
+	return hostid
+}
+
+// 从Windows注册表读取MachineGuid
+func getMachineGUID() (string, error) {
+	// 注册表路径：HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography
+	keyPath, err := syscall.UTF16PtrFromString(`SOFTWARE\Microsoft\Cryptography`)
+	if err != nil {
+		return "", err
 	}
 
-	// 如果没有IPv4，使用第一个IPv6地址
-	if ipv4 == nil && len(addrs) > 0 {
-		ipv4 = addrs[0].To4() // 可能为nil，但会在后续处理
+	// 打开注册表项
+	var hKey syscall.Handle
+	err = syscall.RegOpenKeyEx(syscall.HKEY_LOCAL_MACHINE, keyPath, 0, syscall.KEY_READ, &hKey)
+	if err != nil {
+		return "", err
+	}
+	defer syscall.RegCloseKey(hKey)
+
+	// 读取MachineGuid值
+	valueName, err := syscall.UTF16PtrFromString("MachineGuid")
+	if err != nil {
+		return "", err
 	}
 
-	if ipv4 == nil {
-		return 0, fmt.Errorf("no valid IP address found")
+	// 先查询所需缓冲区大小
+	var bufSize uint32
+	var bufType uint32
+	err = syscall.RegQueryValueEx(hKey, valueName, nil, &bufType, nil, &bufSize)
+	if err != nil {
+		return "", err
 	}
 
-	// 将IP地址转换为32位整数并进行位运算（类似glibc实现）
-	ipInt := binary.BigEndian.Uint32(ipv4)
-	return (ipInt << 16) | (ipInt >> 16), nil
+	// 分配缓冲区并读取值
+	buf := make([]uint16, bufSize/2)
+	err = syscall.RegQueryValueEx(hKey, valueName, nil, &bufType, (*byte)(unsafe.Pointer(&buf[0])), &bufSize)
+	if err != nil {
+		return "", err
+	}
+
+	// 将UTF-16字节转换为Go字符串
+	guid := syscall.UTF16ToString(buf)
+	return guid, nil
 }
