@@ -70,7 +70,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/fold
 * [ ] /usr/bin/groups
 * [ ] /usr/bin/head
-* [ ] /usr/bin/hostid
+* [x] /usr/bin/hostid
 * [ ] /usr/bin/id
 * [ ] /usr/bin/install
 * [ ] /usr/bin/join
