@@ -21,9 +21,6 @@ const (
 )
 
 func main() {
-	os.Args = []string{
-		os.Args[0],
-	}
 	helpInfo := common.HelpInfo{
 		Name:        os.Args[0],
 		UsageLines:  []string{"[OPTION]..."},
@@ -44,49 +41,52 @@ func main() {
 
 	mode := NprocCurrentOverridable
 	all := common.GetBool("all")
+	ignore := common.GetInt("ignore")
 	if all {
 		mode = NprocAll
 	}
-	fmt.Println(NumProcessors(mode))
+
+	nproc := NumProcessors(mode)
+	uignore := uint64(ignore)
+	if uignore < nproc {
+		nproc -= uignore
+	} else {
+		nproc = 1
+	}
+	fmt.Println(nproc)
 }
 
 // 解析环境变量为 uint64
-func parseOmpThreads(env string) *uint64 {
+func parseOmpThreads(env string) uint64 {
 	val := os.Getenv(env)
 	if val == "" {
-		return nil
+		return 0
 	}
 	num, err := strconv.ParseUint(val, 10, 64)
 	if err != nil || num == 0 {
-		return nil
+		return 0
 	}
-	return &num
+	return num
 }
 
 func NumProcessors(query NprocQuery) uint64 {
-	var ompEnvLimit uint64 = 0
-
+	var ompEnvLimit = ulongMax
 	if query == NprocCurrentOverridable {
 		ompEnvThreads := parseOmpThreads("OMP_NUM_THREADS")
 		ompEnvLimit := parseOmpThreads("OMP_THREAD_LIMIT")
-		if ompEnvLimit == nil {
-			*ompEnvLimit = ulongMax
+		if ompEnvLimit == 0 {
+			ompEnvLimit = ulongMax
 		}
-		if ompEnvThreads != 0 {
-			return min(*ompEnvThreads, *ompEnvLimit)
+		if ompEnvThreads > 0 {
+			return min(ompEnvThreads, ompEnvLimit)
 		}
 		query = NprocCurrent
 	}
 
-	// 查询实际 CPU 数量
-	nprocs := uint64(runtime.NumCPU())
-
-	if *ompEnvLimit == 1 {
+	if ompEnvLimit == 1 {
 		return 1
 	}
-
-	if nprocs < *ompEnvLimit {
-		return nprocs
-	}
-	return *ompEnvLimit
+	// 查询实际 CPU 数量
+	nprocs := uint64(runtime.NumCPU())
+	return min(nprocs, ompEnvLimit)
 }
