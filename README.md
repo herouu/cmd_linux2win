@@ -81,7 +81,7 @@ dpkg -L coreutils | grep -E '^(/usr/bin/|/bin/)' | wc -l
 * [ ] /usr/bin/nice
 * [ ] /usr/bin/nl
 * [ ] /usr/bin/nohup
-* [ ] /usr/bin/nproc
+* [x] /usr/bin/nproc
 * [ ] /usr/bin/numfmt
 * [ ] /usr/bin/od
 * [ ] /usr/bin/paste
