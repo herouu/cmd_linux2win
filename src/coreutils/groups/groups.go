@@ -5,10 +5,8 @@ import (
 	flag "cmd_linux2win/src/lib/github.com/spf13/pflag"
 	"fmt"
 	"os"
+	"syscall"
 )
-
-//#include <unistd.h>
-import "C"
 
 const appName = "groups"
 
@@ -37,11 +35,21 @@ the current process (which may differ if the groups database has changed).
 	args := flag.Args()
 
 	if len(args) == 0 {
-		fmt.Println(C.getuid())
-	} else {
-		for _, arg := range args {
-			fmt.Println(arg)
+		msys2 := syscall.NewLazyDLL("msys-2.0.dll")
+		proc := msys2.NewProc("getuid")
+		err := proc.Find()
+		if err != nil {
+			fmt.Println(err)
 		}
+		fmt.Println(proc)
+		r1, r3, err := proc.Call()
+		fmt.Println(r1)
+		fmt.Println(r3)
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else {
+
 	}
 
 }
